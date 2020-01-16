@@ -115,4 +115,81 @@ class Transaction
 };
 
 void generateTransactions(std::vector<Transaction> &trans, std::vector<User> &users);
+std::string generateMerkleRoot(std::vector<Transaction> data);
+
+class Block
+{
+    private:
+        std::string blockHash_;
+        std::string previousHash_;
+        std::string merkleRootHash_;
+        time_t timestamp_;
+
+    public:
+        std::vector<Transaction> data_;
+        int nonce, diffTarget;
+
+        Block()
+        {
+            data_ = {};
+            blockHash_ = "";
+            previousHash_ = "";
+            merkleRootHash_ = "";
+            nonce = 0;
+            timestamp_ = 0;
+            diffTarget = 0;
+        };
+
+        Block(std::vector<Transaction> &data, std::string &previousHash)
+        {
+            previousHash_ = previousHash;
+            data_ = data;
+            merkleRootHash_ = generateMerkleRoot(data);
+            std::string word = "";
+            word = merkleRootHash_ + previousHash_; 
+            blockHash_ = createHash(word);
+            nonce = 0;
+            timestamp_ = 0;
+            diffTarget = 0;
+        }
+
+        void hashBlock()
+        {
+            merkleRootHash_ = generateMerkleRoot(data_);
+            std::string word = "";
+            word = merkleRootHash_ + previousHash_;
+            blockHash_ = createHash(word);
+        }
+
+        void setTimeStamp(time_t &time) { timestamp_ = time; }
+        std::string const getHash() { return blockHash_; }
+        std::string const getPreviousHash() { return previousHash_; }
+        ~Block() { data_.clear(); }
+};
+
+class Blockchain
+{
+    private:
+        std::vector<Block> chain_;
+        void createGenesisBlock()
+        {
+            Block genesis;
+            chain_.push_back(genesis);
+        }
+
+    public:
+        Blockchain() { createGenesisBlock(); }
+        const unsigned int getBlockchainSize() { return chain_.size(); }
+        const std::string getBlockHash(int a) { return chain_[a].getHash(); }
+        void addBlock(Block &a)
+        {
+            chain_.push_back(a);
+        }
+        ~Blockchain() { chain_.clear(); }
+};
+
+void minerAmount(std::vector<Transaction> &trans, std::vector<Block> &miners);
+bool mine(Block &a);
+void printChain(Blockchain &blockchain);
+
 #endif
