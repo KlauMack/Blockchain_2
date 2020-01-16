@@ -133,3 +133,48 @@ std::string createHash(std::string &input)
 
     return key.getOutput();
 }
+
+//function to generate merkle root.
+std::string generateMerkleRoot( std::vector<Transaction> data)
+{
+    std::vector<std::string> merkel = {};
+    std::vector<std::string> merkel2 = {};
+    std::string word, hashed;
+
+    for(unsigned int i = 0; i < data.size(); i++)
+    {
+        merkel.push_back( data[i].getID() );
+    }
+
+    while( merkel.size() > 1)
+    {
+        if( merkel.size() % 2 == 0)
+        {
+            for( unsigned i = 0; i < merkel.size(); i=i+2)
+            {
+                word = merkel[i] + merkel[i+1];
+                hashed = createHash(word);
+                merkel2.push_back(hashed);
+            }
+        }
+        else
+        {
+            for( unsigned i = 0; i < merkel.size() - 1; i=i+2)
+            {
+                word = merkel[i] + merkel[i+1];
+                hashed = createHash(word);
+                merkel2.push_back(hashed);
+            } 
+
+            word = merkel[merkel.size()-1];
+            hashed = createHash(word);
+            merkel2.push_back(hashed);
+        }
+
+        merkel.clear();
+        merkel = merkel2;
+        merkel2.clear();
+    }
+
+    return merkel[0];
+}

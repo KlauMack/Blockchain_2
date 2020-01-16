@@ -68,9 +68,54 @@ void generateTransactions(std::vector<Transaction> &trans, std::vector<User> &us
     outfile.close();
 }
 
+// function to validate transactions
+void validateTransactions(std::vector<Transaction> &trans, std::vector<User> &users, std::vector<Transaction> &validTrans)
+{
+    double newAmount = 0;
+    std::string testID = "", stringAmmount = "", a ="", b = "";
+    for(unsigned int i = 0; i < trans.size(); i++)
+    {
+        for(unsigned int j = 0; j < users.size(); j++)
+        {
+            if((trans[i].getSenderKey() == users[j].getPublicKey()) && (trans[i].getAmount() <= users[j].getBalance()))
+            {
+                for(unsigned int k = 0; k < users.size(); k++)
+                {
+                    if(trans[i].getReceiverKey() == users[k].getPublicKey())
+                    {
+                        stringAmmount = std::to_string(trans[i].getAmount());
+                        a = users[j].getPublicKey();
+                        b = users[k].getPublicKey();
+                        testID = a + b + stringAmmount;
+                        if(createHash( testID ) == trans[i].getID()){
+                            validTrans.push_back(trans[i]);
+                            newAmount = users[j].getBalance() - trans[i].getAmount();
+                            users[j].setBalance( newAmount );
+                            newAmount = users[k].getBalance() + trans[i].getAmount();
+                            users[k].setBalance( newAmount );
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    std::ofstream outfile ("validTransactions.txt");
+    for(unsigned int i = 0; i < validTrans.size(); i++)
+    {
+        outfile << validTrans[i].getAmount() << std::setprecision(6) << "\n";
+        outfile << validTrans[i].getSenderKey() << "\n";
+        outfile << validTrans[i].getReceiverKey() << "\n";
+        outfile << "\n";
+    }
+    outfile.close();
+}
+
 // function to make multiple first blocks
-void minerAmount(std::vector<Transaction> & trans, std::vector<Block> & miners){
-    if( trans.size() >= 500)
+void minerAmount(std::vector<Transaction> & validTrans, std::vector<Block> & miners){
+    if( validTrans.size() >= 500)
     {
 		Block a,b,c,d,e;
 		miners.push_back(a);
@@ -79,25 +124,25 @@ void minerAmount(std::vector<Transaction> & trans, std::vector<Block> & miners){
 		miners.push_back(d);
 		miners.push_back(e);
 	}
-    if( trans.size() < 500 && trans.size() >= 400){
+    if( validTrans.size() < 500 && validTrans.size() >= 400){
 		Block a,b,c,d;
 		miners.push_back(a);
 		miners.push_back(b);
 		miners.push_back(c);
 		miners.push_back(d);
 	}
-    if( trans.size() < 400 && trans.size() >= 300){
+    if( validTrans.size() < 400 && validTrans.size() >= 300){
 		Block a,b,c;
 		miners.push_back(a);
 		miners.push_back(b);
 		miners.push_back(c);
 	}
-    if( trans.size() < 300 && trans.size() >= 200){
+    if( validTrans.size() < 300 && validTrans.size() >= 200){
 		Block a,b;
 		miners.push_back(a);
 		miners.push_back(b);
 	}
-    if( trans.size() < 200 && trans.size() >= 100){
+    if( validTrans.size() < 200 && validTrans.size() >= 100){
 		Block a;
 		miners.push_back(a);
 	}
@@ -152,41 +197,4 @@ void printChain( Blockchain &blockchain)
         outfile << "\n";
     }
     outfile.close();
-}
-
-std::string create_merkle(std::vector<Transaction> data)
-{
-    // Stop if hash list is empty or contains one element
-    if (data.empty())
-        return 0;
-    else if (data.size() == 1)
-        return data.at[0];
-
-    // While there is more than 1 hash in the list, keep looping...
-    while (data.size() > 1)
-    {
-        // If number of hashes is odd, duplicate last hash in the list.
-        if (data.size() % 2 != 0)
-            data.push_back(data.back());
-        // List size is now even.
-        assert(data.size() % 2 == 0);
-
-        // New hash list.
-        std::vector<Transaction> new_data;
-        std::string new_word;
-        // Loop through hashes 2 at a time.
-        for (unsigned int i = 0; i < data.size(); i + 2)
-        {
-            // Join both current hashes together (concatenate).
-            new_word = data[i].getSenderKey() + data[i + 1].getSenderKey();
-            // Hash both of the hashes.
-            std::string new_root = createHash(new_word);
-            // Add this to the new list.
-            new_data.push_back(new_root);
-        }
-        // This is the new list.
-        data = new_data;
-    }
-    // Finally we end up with a single item.
-    return data.at[0];
 }

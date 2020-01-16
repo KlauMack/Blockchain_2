@@ -106,15 +106,20 @@ class Transaction
             amount_ = amount;
             senderKey_ = senderKey;
             receiverKey_ = receiverKey;
+            std::string stringAmount = std::to_string(amount);
+            std::string temp = senderKey_ + receiverKey_ + stringAmount;
+            ID_ = createHash(temp);
         };
 
         const double getAmount() { return amount_; }
         const std::string getSenderKey() { return senderKey_; }
         const std::string getReceiverKey() { return receiverKey_; }
+        const std::string getID() { return ID_; }
         ~Transaction() {};
 };
 
 void generateTransactions(std::vector<Transaction> &trans, std::vector<User> &users);
+void validateTransactions(std::vector<Transaction> &trans, std::vector<User> &users, std::vector<Transaction> &validTrans);
 std::string generateMerkleRoot(std::vector<Transaction> data);
 
 class Block
@@ -188,7 +193,7 @@ class Blockchain
         ~Blockchain() { chain_.clear(); }
 };
 
-void minerAmount(std::vector<Transaction> &trans, std::vector<Block> &miners);
+void minerAmount(std::vector<Transaction> &validTrans, std::vector<Block> &miners);
 bool mine(Block &a);
 void printChain(Blockchain &blockchain);
 

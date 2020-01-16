@@ -8,6 +8,9 @@ int main()
     std::vector<Transaction> trans;
     generateTransactions(trans, users);
 
+    std::vector<Transaction> validTrans;
+	validateTransactions(trans, users, validTrans);
+
     std::cout << "Type 0 to start the chain, type 1 to stop \n";
 	std::string input;
 	std::cin >>  input;
@@ -26,7 +29,7 @@ int main()
 
         while(input == "0")
         {
-            if(trans.size() < 100)
+            if(validTrans.size() < 100)
             {
                 std::cout << "Not enough transactions for new blocks! (should be 100) \n";
                 printChain(blockchain);
@@ -34,9 +37,7 @@ int main()
             }
 
             std::vector<Block> miners = {};
-
-            Block temp;
-            miners.push_back(temp);
+            minerAmount(validTrans, miners);
 
             for(unsigned int i = 0; i < miners.size() * 100; i = i + miners.size())
             {
@@ -50,10 +51,15 @@ int main()
             unsigned int input1;
             std::cin >> input1;
 
+            std::cout << "How many times can the program swap transactions inside the block? \n";
+            unsigned int input2;
+            std::cin >> input2;
+
             for(unsigned int i = 0; i < miners.size(); i++)
             {
+
                 miners[i].diffTarget = input1; // the number of 0s in the front of a hash.
-                miners[i].nonce = 100; // allowed switches
+                miners[i].nonce = input2;
 
                 if(mine(miners[i]) == true)
                 {
@@ -62,6 +68,18 @@ int main()
                     blockchain.addBlock(miners[i]);
                     std::cout << "Generated block of a miner " << i << "\n";
 
+                    for( unsigned int j = 0; j < miners[i].data_.size(); j++) // checking and deleting changed transactions in the pool
+                    {
+						for( unsigned int k = 0; k < validTrans.size(); k++)
+                        {
+							if( miners[i].data_[j].getID() == validTrans[k].getID())
+                            {
+								validTrans.erase(validTrans.begin() + k);
+
+                                break;
+                            }
+                        }
+                    }
                     break;
                 }
                 else
