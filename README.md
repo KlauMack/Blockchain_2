@@ -30,10 +30,6 @@ Sukurti "centralizuotą" blokų grandinę (blockchain'ą) ir susimuliuokite blok
   - Pasirinkite, kiek nulių turi būti hasho pradžioje;
   - Pasirinkite bandymų skaičių;
 
-## Trūkumai:
-- Kode yra klaidų, kurios neleidžia paleisti prgramos;
-- Nesutvarkytas bloko mininimo procesas - todėl programa neveikia;
-
 ## Codes:
 
 ### User
@@ -98,15 +94,20 @@ class Transaction
             amount_ = amount;
             senderKey_ = senderKey;
             receiverKey_ = receiverKey;
+            std::string stringAmount = std::to_string(amount);
+            std::string temp = senderKey_ + receiverKey_ + stringAmount;
+            ID_ = createHash(temp);
         };
 
         const double getAmount() { return amount_; }
         const std::string getSenderKey() { return senderKey_; }
         const std::string getReceiverKey() { return receiverKey_; }
+        const std::string getID() { return ID_; }
         ~Transaction() {};
 };
 
 void generateTransactions(std::vector<Transaction> &trans, std::vector<User> &users);
+void validateTransactions(std::vector<Transaction> &trans, std::vector<User> &users, std::vector<Transaction> &validTrans);
 std::string generateMerkleRoot(std::vector<Transaction> data);
 ```
 
@@ -185,4 +186,50 @@ class Blockchain
         }
         ~Blockchain() { chain_.clear(); }
 };
+```
+### Merkle generator
+```c++
+std::string generateMerkleRoot( std::vector<Transaction> data)
+{
+    std::vector<std::string> merkel = {};
+    std::vector<std::string> merkel2 = {};
+    std::string word, hashed;
+
+    for(unsigned int i = 0; i < data.size(); i++)
+    {
+        merkel.push_back( data[i].getID() );
+    }
+
+    while( merkel.size() > 1)
+    {
+        if( merkel.size() % 2 == 0)
+        {
+            for( unsigned i = 0; i < merkel.size(); i=i+2)
+            {
+                word = merkel[i] + merkel[i+1];
+                hashed = createHash(word);
+                merkel2.push_back(hashed);
+            }
+        }
+        else
+        {
+            for( unsigned i = 0; i < merkel.size() - 1; i=i+2)
+            {
+                word = merkel[i] + merkel[i+1];
+                hashed = createHash(word);
+                merkel2.push_back(hashed);
+            } 
+
+            word = merkel[merkel.size()-1];
+            hashed = createHash(word);
+            merkel2.push_back(hashed);
+        }
+
+        merkel.clear();
+        merkel = merkel2;
+        merkel2.clear();
+    }
+
+    return merkel[0];
+}
 ```
