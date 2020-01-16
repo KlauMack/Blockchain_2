@@ -89,4 +89,30 @@ class User
 
 void generateUsers(std::vector<User> &users);
 
+class Transaction
+{
+    private:
+        std::string ID_;
+
+    public:
+        double amount_;
+        std::string senderKey_;
+        std::string receiverKey_;
+
+        Transaction() {};
+
+        Transaction(double amount, std::string senderKey, std::string receiverKey)
+        {
+            amount_ = amount;
+            senderKey_ = senderKey;
+            receiverKey_ = receiverKey;
+        };
+
+        const double getAmount() { return amount_; }
+        const std::string getSenderKey() { return senderKey_; }
+        const std::string getReceiverKey() { return receiverKey_; }
+        ~Transaction() {};
+};
+
+void generateTransactions(std::vector<Transaction> &trans, std::vector<User> &users);
 #endif
